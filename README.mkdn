@@ -10,11 +10,13 @@ Patrick Stein <pat@nklein.com>
 
 ## <a name="obtaining">Obtaining</a>
 
+* The home page: [http://nklein.com/software/method-versions/][home]
 * The tar-ball: [method-versions-0.1.2011.05.18.tar.gz][tarball]
 * The GPG signature for the tar-ball: [method-versions-0.1.2011.05.18.tar.gz.asc][sig]
 * The main git repository: [http://git.nklein.com/lisp/libs/method-versions.git][git]
 * A browsable mirror of the git repository: [http://github.com/nklein/method-versions.git][github]
 
+  [home]:    http://nklein.com/software/method-versions/
   [tarball]: http://nklein.com/wp-content/uploads/2011/05/method-versions-0.1.2011.05.18.tar.gz
   [sig]:     http://nklein.com/wp-content/uploads/2011/05/method-versions-0.1.2011.05.18.tar.gz.sig
   [git]:     http://git.nklein.com/lisp/libs/method-versions.git
@@ -22,7 +24,7 @@ Patrick Stein <pat@nklein.com>
   
 ## <a name="usage">Usage</a>
 
-The [method-versions](http://nklein.com/software/method-versions/)
+The [method-versions][home]
 library provides a method-combination one can use to create multiple
 versions of a method and switch which one is invoked through a
 special variable.
