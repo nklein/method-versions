@@ -1,0 +1,119 @@
+;; Copyright (c) 2011 nklein software
+;; MIT License. See included LICENSE.txt file for licensing details.
+
+# method-versions v0.1.2011.05.18
+
+Patrick Stein <pat@nklein.com>
+
+* [Obtaining](#obtaining)
+* [Usage](#usage)
+
+## <a name="obtaining">Obtaining</a>
+
+* The tar-ball: [method-versions-0.1.2011.05.18.tar.gz][tarball]
+* The GPG signature for the tar-ball: [method-versions-0.1.2011.05.18.tar.gz.asc][sig]
+* The main git repository: [http://git.nklein.com/lisp/libs/method-versions.git][git]
+* A browsable mirror of the git repository: [http://github.com/nklein/method-versions.git][github]
+
+  [tarball]: http://nklein.com/wp-content/uploads/2011/05/method-versions-0.1.2011.05.18.tar.gz
+  [sig]:     http://nklein.com/wp-content/uploads/2011/05/method-versions-0.1.2011.05.18.tar.gz.sig
+  [git]:     http://git.nklein.com/lisp/libs/method-versions.git  [github]:  http://github.com/nklein/method-versions.git
+  
+## <a name="usage">Usage</a>
+
+The [method-versions](http://nklein.com/software/method-versions/)
+library provides a method-combination one can use to create multiple
+versions of a method and switch which one is invoked through a
+special variable.
+
+For example, suppose you were working on a protocol for a simple
+client-server application.  You may have methods like this:
+
+    (defmethod send-cmd ((cmd login-cmd))
+      (send-string (login-name cmd))
+      (send-string (login-password cmd)))
+    
+    (defmethod recv-cmd ((cmd login-cmd))
+      (setf (login-name cmd) (recv-string))
+      (setf (login-password cmd) (recv-string)))
+
+After a few months of beta-testing, you want to extend the login
+command to include a geographic location.  If you just update your
+`send-cmd` and `recv-cmd` methods for the `login-cmd`, then you will
+have to jump through all kinds of hoops to make sure that you can
+handle receiving a login command from users with the new `send-cmd` in
+their binary and users with the old `send-cmd` in their binary.
+
+You can use the method-versions library to create a version of your
+server that can handle both versions in a sane manner.
+
+First, you define a version for the new variant of your protocol.
+
+    (method-versions:define-method-version :v1.0)
+
+Note: The `define-method-version` accepts an optional second parameter
+which specifies the parent version.  So, for future expansion, one could
+end up with the following:
+
+    (method-versions:define-method-version :v1.0)
+    (method-versions:define-method-version :v1.1 v1.0)
+    (method-versions:define-method-version :v1.2 v1.1)
+    (method-versions:define-method-version :v2.0 v1.2)
+    (method-versions:define-method-version :v1.1-bugfix-1 v1.1)
+
+After you have established your versions, you define a special
+variable which will track which version of your methods you would like
+to use during any given invocation and declare your generic method to
+use the `method-versions-method-combination` with your tracking
+variable.
+
+    (declaim (special *protocol-version*))
+    (defparameter *protocol-version* :v1.0)
+
+    (defgeneric send-cmd (cmd)
+      (:method-combination method-versions:method-versions-method-combination
+                           *protocol-version*))
+
+    (defgeneric recv-cmd (cmd)
+      (:method-combination method-versions:method-versions-method-combination
+                           *protocol-version*))
+
+Next, you declare your default versions as before and declare your
+`:v1.0` versions using the version as a method qualifier.  (For brevity,
+we only show the `recv-cmd` here, but the `recv-cmd` is similar.)
+
+    (defmethod recv-cmd ((cmd login-cmd))
+      (setf (login-name cmd) (recv-string))
+      (setf (login-password cmd) (recv-string)))
+
+    (defmethod recv-cmd :v1.0 ((cmd login-cmd))
+      (setf (login-name cmd) (recv-string))
+      (setf (login-password cmd) (recv-string))
+      (setf (login-nickname cmd) (recv-string)))
+
+Now, if you want to receive a message coming in from a client who is
+using the original version, you would ensure `*protocol-version*`
+is set to `nil` and then invoke the `recv-cmd` method.
+
+    (let ((*protocol-version* nil))
+      (recv-cmd cmd))
+
+For clients who are using the new version, you would set the
+`*protocol-version*` appropriately and then invoke the `recv-cmd`
+method.
+
+    (let ((*protocol-version* :v1.0))
+      (recv-cmd cmd))
+
+Of course, you will have to know which version of the protocol the
+client is sending.  We recommend that you assume the client is using
+the default version and add a message to your connection establishment
+phase where the client tells the server what version the client is
+using.
+
+    (defmethod send-cmd ((cmd version-cmd))
+      (send-string (package-name (symbol-package *protocol-version*)))
+      (send-string (symbol-name *protocol-version*)))
+
+Then, use that version when receiving subsequent commands from that
+client.
