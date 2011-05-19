@@ -14,13 +14,13 @@ Patrick Stein <pat@nklein.com>
 * The tar-ball: [method-versions-0.1.2011.05.18.tar.gz][tarball]
 * The GPG signature for the tar-ball: [method-versions-0.1.2011.05.18.tar.gz.asc][sig]
 * The main git repository: [http://git.nklein.com/lisp/libs/method-versions.git][git]
-* A browsable mirror of the git repository: [http://github.com/nklein/method-versions.git][github]
+* A browsable mirror of the git repository: [http://github.com/nklein/method-versions][github]
 
   [home]:    http://nklein.com/software/method-versions/
   [tarball]: http://nklein.com/wp-content/uploads/2011/05/method-versions-0.1.2011.05.18.tar.gz
   [sig]:     http://nklein.com/wp-content/uploads/2011/05/method-versions-0.1.2011.05.18.tar.gz.sig
   [git]:     http://git.nklein.com/lisp/libs/method-versions.git
-  [github]:  http://github.com/nklein/method-versions.git
+  [github]:  http://github.com/nklein/method-versions
   
 ## <a name="usage">Usage</a>
 
