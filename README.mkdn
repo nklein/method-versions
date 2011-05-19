@@ -6,7 +6,9 @@
 Patrick Stein <pat@nklein.com>
 
 * [Obtaining](#obtaining)
-* [Usage](#usage)
+* [Overview](#overview)
+* [Protocol Example](#protocol)
+* [Internationalization Example](#internationalization)
 
 ## <a name="obtaining">Obtaining</a>
 
@@ -22,12 +24,27 @@ Patrick Stein <pat@nklein.com>
   [git]:     http://git.nklein.com/lisp/libs/method-versions.git
   [github]:  http://github.com/nklein/method-versions
   
-## <a name="usage">Usage</a>
+## <a name="overview">Overview</a>
 
-The [method-versions][home]
-library provides a method-combination one can use to create multiple
-versions of a method and switch which one is invoked through a
-special variable.
+There are situations where one might like to dispatch a method on some
+information other than the required parameters of the method.  For
+many situations, it is sufficient to switch between those methods
+based on some external parameter.  The [method-versions][home] library
+allows one to do just that.
+
+For more complicated situations where one also wants to turn on and
+off slots within classes, one might prefer [ContextL][contextl].  For
+situations where one wants to dispatch a method based on predicates on
+the arguments, one might prefer [Filtered Functions][ffuncs].
+
+  [contextl]: http://common-lisp.net/project/closer/contextl.html
+  [ffuncs]:   http://common-lisp.net/project/closer/filtered.html
+
+## <a name="protocol">Protocol Example</a>
+
+The [method-versions][home] library provides a method-combination one
+can use to create multiple versions of a method and switch which one
+is invoked through a special variable.
 
 For example, suppose you were working on a protocol for a simple
 client-server application.  You may have methods like this:
@@ -120,3 +137,40 @@ using.
 
 Then, use that version when receiving subsequent commands from that
 client.
+
+## <a name="internationalization">Internationalization Example</a>
+
+In this example, we do a silly form of internationalization.
+To that end, we will use English as the default language and define
+some other languages.
+
+    (method-versions:define-method-version latin)
+    (method-versions:define-method-version pig-latin)
+    (method-versions:define-method-version french latin)
+    (method-versions:define-method-version spanish latin)
+
+We will prepare a language parameter and a welcome method that
+is versioned on the language.
+
+    (declaim (special *language*))
+    (defparameter *language* nil)
+
+    (defgeneric welcome ()
+      (:method-combination method-versions:method-version-method-combination
+                           *language*))
+
+And, we define welcome methods for the various languages (accidentally
+forgetting `spanish`).
+
+    (defmethod welcome () :welcome)
+    (defmethod welcome :latin     () :velkominum)
+    (defmethod welcome :pig-latin () :elcomeway)
+    (defmethod welcome :french    () :bonjour)
+
+Then, we will try each of the languages in turn.
+
+    (mapcar #'(lambda (ll)
+                (let ((*language* ll))
+                  (welcome)))
+            '(nil :latin :pig-latin :french :spanish))
+    => (:welcome :velkominum :elcomeway :bonjour :velkominum)

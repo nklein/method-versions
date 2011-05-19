@@ -3,7 +3,7 @@
 
 (asdf:defsystem #:method-versions
   :description "method-versions: package for creating versioned methods"
-  :version "0.1.2011.05.19"
+  :version "0.1.2011.05.18"
   :author "Patrick Stein <pat@nklein.com>"
   :licence "MIT"
   :serial t

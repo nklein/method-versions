@@ -4,52 +4,49 @@
 ;; load the method-versions library
 (require 'method-versions)
 
-;; prepare some versions
+;; prepare some versions for the about
+(method-versions:define-method-version :latin)
+(method-versions:define-method-version :pig-latin :latin)
+(method-versions:define-method-version :french)
+(method-versions:define-method-version :spanish)
+
+;; prepare a version parameter for our first test program
+(declaim (special *language*))
+(defparameter *language* nil)
+
+;; declare our generic method to use the method-version method combination
+(defgeneric welcome ()
+  (:method-combination method-versions:method-version-method-combination
+                       *language*))
+
+;; define a variant of our method without a version
+(defmethod welcome ()
+  :welcome)
+
+;; set up a macro to quickly let us make some versioned about methods
+(defmacro defwelcome ((version) &body body)
+  `(defmethod welcome ,version ()
+     ,@body))
+
+;; make some versioned welcome methods
+(defwelcome (:latin)     :velkominum)  ;; someone fire that translator
+(defwelcome (:pig-latin) :elcomeway)
+(defwelcome (:french)    :bonjour)
+
+;; verify
+(let ((greets (mapcar #'(lambda (vv)
+                          (let ((*language* vv))
+                            (welcome)))
+                      '(nil :latin :pig-latin :french :spanish))))
+  (format t "Greets: ~S~%" greets)
+  (assert (equal greets
+                 '(:welcome :velkominum :elcomeway :bonjour :welcome))))
+
+;; prepare some versions for the serialize methods
 (method-versions:define-method-version :v1)
 (method-versions:define-method-version :v1.1 :v1)
 (method-versions:define-method-version :v1.2 :v1.1)
 (method-versions:define-method-version :v2   :v1)
-
-;; prepare a version parameter for our first test program
-(declaim (special *about-version*))
-(defparameter *about-version* nil)
-
-
-;; declare our generic method to use the method-version method combination
-(defgeneric about ()
-  (:method-combination method-versions:method-version-method-combination
-                       *about-version*))
-
-;; define a variant of our about method without a version
-(defmethod about ()
-  :unversioned)
-
-;; set up a macro to quickly let us make some versioned about methods
-(defmacro defabout ((version) &body body)
-  `(defmethod about ,version ()
-     ,@body))
-
-;; make some versioned about methods
-(defabout (:v1)   :version-1)
-(defabout (:v1.1) :version-1.1)
-(defabout (:v2)   :version-2)
-
-;; make sure that the versioned methods work as expected:
-;;
-;;   :v1   => :version-1
-;;   :v1.1 => :version-1.1
-;;   :v1.2 => :version-1.1 (because :v1.1 is the most-specific ancestor
-;;                          of :v1.2 with the about method defined for it)
-;;   :v2   => :version-2
-;;
-(let ((abouts (mapcar #'(lambda (vv)
-                          (let ((*about-version* vv))
-                            (about)))
-                      '(:v1 :v1.1 :v1.2 :v2 nil))))
-  (format t "Abouts: ~S~%" abouts)
-  (assert (equal abouts
-                 '(:version-1 :version-1.1 :version-1.1
-                   :version-2 :unversioned))))
 
 ;; declare a separate version parameter for serialization functions
 (declaim (special *serialization-version*))
