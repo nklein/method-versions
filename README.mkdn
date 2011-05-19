@@ -5,11 +5,89 @@
 
 Patrick Stein <pat@nklein.com>
 
+* [Deprecated](#deprecated)
 * [Overview](#overview)
 * [Obtaining](#obtaining)
 * [Comparison to ContextL](#compare)
 * [Protocol Example](#protocol)
 * [Internationalization Example](#internationalization)
+
+## <a name="deprecated">Deprecated</a>
+
+When I wrote this library, I had read about [ContextL][contextl] and
+decided that I only wanted a very small subset of it and wanted it to
+be very easy to use.  It turns out that I didn't quite understand the
+complexity-level of ContextL.  It is actually very similar to what I
+have described below.
+
+With this library, you set up some versions and a variable to track
+the current version:
+
+    (method-versions:define-method-version :v1.0)
+    (method-versions:define-method-version :v1.1 :v1.0)
+    
+    (declaim (special *protocol-version*))
+    (defparameter *protocol-version* :v1.0)
+
+In ContextL, you just set up some layers:
+
+    (contextl:deflayer :v1.0)
+    (contextl:deflayer :v1.1 (:v1.0))
+
+In my library, you then set up a generic function that uses a special
+method combination that keys off of the special variable:
+
+    (defgeneric send-cmd (cmd)
+      (:method-combination method-versions:method-versions-method-combination
+                           *protocol-version*))
+
+In ContextL, you declare a layered function:
+
+    (contextl:define-layered-function (cmd))
+
+In my library, you then declare different methods using the version as
+a method qualifier.
+
+    (defmethod send-cmd ((cmd login-cmd))
+      (send-string (login-name cmd))
+      (send-string (login-password cmd)))
+      
+    (defmethod send-cmd :v1.0 ((cmd login-cmd))
+      (send-string (login-name cmd))
+      (send-string (login-password cmd))
+      (send-string (login-location cmd)))
+
+In ContextL, you declare layered methods specifying which layer
+the functions belong to:
+
+    (contextl:define-layered-method send-cmd ((cmd login-cmd))
+      (send-string (login-name cmd))
+      (send-string (login-password cmd)))
+      
+    (contextl:define-layered-method send-cmd :in :v1.0 ((cmd login-cmd))
+      (send-string (login-name cmd))
+      (send-string (login-password cmd))
+      (send-string (login-location cmd)))
+
+In my library, you set you special variable appropriately and invoke
+the method:
+
+    (let ((*protocol-version* :v1.1))
+      (send-cmd cmd))
+
+In ContextL, you declare which layer you want to be active when you
+go to invoke the method:
+
+    (contextl:with-active-layers (:v1.1)
+      (send-cmd cmd))
+
+The library below does not let you specify other method qualifiers
+like `:around` or `:after`.  ContextL does.
+
+I am going to leave this library published because I think it is
+a reasonably understandable, yet non-trivial, use of non-standard
+method combinations.  However, I am going to end up using
+ContextL for the projects that I had intended for this library.
 
 ## <a name="overview">Overview</a>
 
