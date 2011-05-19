@@ -120,7 +120,7 @@ variable.
 
 Next, you declare your default versions as before and declare your
 `:v1.0` versions using the version as a method qualifier.  (For brevity,
-we only show the `recv-cmd` here, but the `recv-cmd` is similar.)
+we only show the `recv-cmd` here, but the `send-cmd` is similar.)
 
     (defmethod recv-cmd ((cmd login-cmd))
       (setf (login-name cmd) (recv-string))
@@ -129,7 +129,7 @@ we only show the `recv-cmd` here, but the `recv-cmd` is similar.)
     (defmethod recv-cmd :v1.0 ((cmd login-cmd))
       (setf (login-name cmd) (recv-string))
       (setf (login-password cmd) (recv-string))
-      (setf (login-nickname cmd) (recv-string)))
+      (setf (login-location cmd) (recv-string)))
 
 Now, if you want to receive a message coming in from a client who is
 using the original version, you would ensure `*protocol-version*`
