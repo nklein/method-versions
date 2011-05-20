@@ -69,7 +69,7 @@ the functions belong to:
       (send-string (login-password cmd))
       (send-string (login-location cmd)))
 
-In my library, you set you special variable appropriately and invoke
+In my library, you set your special variable appropriately and invoke
 the method:
 
     (let ((*protocol-version* :v1.1))
